@@ -26,21 +26,29 @@ ignore = (Input.input ()).handle
 
 -- Display
 
+pageWidth = 300
+pageMargin = 20
+
 renderPage : Int -> Page -> Element
-renderPage i p = 
+renderPage i p =
+  width (pageWidth + pageMargin) <| flow down [width pageWidth <| color blue <|
   case p.editing of
     Nothing ->
       asText p.name `above`
-      plainText p.content |> Input.clickable commands.handle (Edit i)
+      (plainText p.content |> width pageWidth) |> Input.clickable commands.handle (Edit i)
     Just c ->
       asText p.name `above`
-      (Field.field Field.defaultStyle commands.handle (\u -> Update i u) "" c |> Input.clickable ignore ())|> color red
+      Field.field Field.defaultStyle commands.handle (\u -> Update i u) "" c |> Input.clickable ignore ()
+      ]
+
+renderPages : [Page] -> Element
+renderPages pages = flow right <| indexedMap renderPage pages
 
 renderScreen : (Int,Int) -> State -> Element
 renderScreen (w,h) s =
-  (flow down (indexedMap renderPage s.pages)
-  `above` Input.button commands.handle Add "Add")
-  |> container w h middle |> Input.clickable commands.handle CommitAllEdits
+  (renderPages s.pages
+  `below` Input.button commands.handle Add "Add Page")
+  |> height h |> Input.clickable commands.handle CommitAllEdits
 
 -- Update
 
