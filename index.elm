@@ -7,7 +7,8 @@ import Window
 
 data Command =
   Start |
-  Edit Int | Update Int Content | CommitAllEdits
+  Edit Int | Update Int Content | CommitAllEdits |
+  Add
 
 type Page = {
   name:String,
@@ -37,13 +38,16 @@ renderPage i p =
 
 renderScreen : (Int,Int) -> State -> Element
 renderScreen (w,h) s =
-  flow down (indexedMap renderPage s.pages)
+  (flow down (indexedMap renderPage s.pages)
+  `above` Input.button commands.handle Add "Add")
   |> container w h middle |> Input.clickable commands.handle CommitAllEdits
 
 -- Update
 
 mapAt : Int -> (a -> a) -> [a] -> [a]
 mapAt n fn list = indexedMap (\i -> \o -> if i == n then fn o else o) list
+
+newPage = {name="Page", content="", editing=Nothing}
 
 endEditing : Page -> Page
 endEditing p = case p.editing of
@@ -56,6 +60,7 @@ step c s = case c of
   Edit i -> { s | pages <- mapAt i (\p -> { p | editing <- Just {string=p.content, selection=Selection 0 0 Forward} }) s.pages}
   Update i c -> { s | pages <- mapAt i (\p -> { p | editing <- Just c } ) s.pages }
   CommitAllEdits -> { s | pages <- map endEditing s.pages }
+  Add -> { s | pages <- s.pages ++ [newPage]}
 
 -- Signals
 
